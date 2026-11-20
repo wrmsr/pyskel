@@ -10,7 +10,9 @@ readme = "README.md"
 authors = [
     { name = "wrmsr" },
 ]
+
 requires-python = ">=3.14"
+
 dependencies = [
     "omcore[cext,mypyc,plus]>=0.0.73",
 ]
