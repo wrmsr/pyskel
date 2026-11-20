@@ -1,0 +1,643 @@
+### Environment
+
+- Target CPython 3.14 - use the modern language and library features it includes.
+  - \[**lite**\] The exception is 'lite' code, which targets python 3.8.
+  - **A module is declared as being lite by having a `# @om-lite` comment at the top of it, or at the top of any
+    `__init__` module in its or any ancestor's package.**
+  - As a reminder, non-\[**lite**\] core is referred to as 'standard' code.
+- Code should run on modern macOS and Linux - Windows support is not necessary, but still prefer things like
+  `os.path.join` over `'/'.join` where reasonable.
+
+
+### Dependencies
+
+- Outside of a few specific subpackages (and test code), there are no external dependencies of any kind to rely on. Use
+  the standard library liberally, use `omcore` for everything else.
+- All external runtime dependencies are optional, and generally fit into the following categories:
+  - Cryptography: `cryptography`. Its use is optional.
+  - File formats: `orjson`, `pyyaml`, `cbor2`, `lxml`, `cloudpickle`, etc. Wherever possible, they serve only as
+    accelerators and their absence will not block functionality - code should strive to have internal fallbacks that
+    prefer correctness to speed.
+  - Text formats: `jinja2`, `markdown-it-py`, etc. Particularly in LLM stuff the full versions of these are unavoidable,
+    but simplified internal 'equivalents' exist for simpler usecases.
+  - Compression algorithms: `lz4`, `python-snappy`, `brotli`, etc. These generally have no internal fallback if not
+    present in the standard library, but are usually optional at runtime in practice.
+  - Database drivers: `pg8000`, `psycopg`, `psycopg2`, `mysql-connector-python`, `mysqlclient`, `pymysql`,
+    `snowflake-connector-python`, `duckdb`, etc. These also generally have no internal fallback.
+  - Large <span aria-label="math">m̶̡̢̡̢̠̥͎͇̯̥̹̪͇͇͇̺̟͋̓͂̇͝͝a̴̧̛̞̾̊͒̈́̿͗̓̐̊͝t̸̥͖͂̀̆͛́̅́͝͠ȟ̴̢͎͙͍̱̒͂́̆̽̽̈́͝</span>
+    libraries: `numpy`, `torch`, `mlx`, `tinygrad`, `transformers`, `llama-cpp-python`, `tokenizers`, etc. These tend to
+    have gigantic interface surface areas compared to the previous categories, and all interaction with them is heavily
+    quarantined to a single isolated package per dependency. Outside of these isolated packages, they absolutely cannot
+    be assumed to be present.
+  - `textual`, specifically - it is the sole chosen TUI library. Almost all terminal functionality throughout the
+    codebase is usable without it - it only powers a small number of specific, larger TUI apps.
+    - **NOTE:** this is in flux.
+  - Async backends: `trio`, `anyio`, `trio-asyncio`. Except in specific situations (such as under `textual`) async code
+    is not assumed to be running under asyncio, and in general async code should use anyio.
+    - **NOTE:** this is in flux.
+  - Unique, focused, irreproducible, core utility libraries: `executing` / `asttokens`, `greenlet`, `wrapt`.  In general
+    'core' utility libraries are either avoided, replaced with an equivalent internal implementation, or in small cases
+    (often for \[**lite**\] code) vendored (preserving licenses, copyrights, and attribution) such as in parts of
+    `omdev.packaging`. However, there is a small number of libraries that do things I have absolutely no interest in
+    attempting or maintaining myself, such as those listed here. As with all other deps these are strictly optional, and
+    fallbacks exist wherever possible.
+  - Various other optional backends: `psutil`, `mwparserfromhell`, `regex`, `ddgs`, `tree-sitter`, etc.
+- Notably absent from this list:
+  - `httpx` / `requests` - use the internal `omcore.http` package.
+  - `pydantic`. Use dataclasses.
+  - `click`. Use argparse.
+  - Any 'web client' library: `boto3`, `google-api-python-client`, `openai`, `anthropic`, etc. These are not used, even
+    optionally, in the codebase. All interaction with such api's is done with internal clients, usually via dataclasses.
+    - Note: references to boto exist in code but only for code generation and cross-validation testing. Boto is not used
+      for production aws interaction.
+  - `gitpython`, `docker`, etc. Drive their cli's through a subprocess or talk to the api through the socket.
+  - `rich` (outside of `textual`). Use `omcore.term`, or simple inline escape codes, or just output plain text.
+  - `loguru` / `logbook` / `structlog`. Use `omcore.logs` or just stdlib `logging`.
+  - `json5`. Use `omcore.formats.json5`.
+  - Various specs: `jsonrpc`, `jsonschema`, `openapi`, `mcp`. Internal implementations exist.
+  - Web frameworks: `flask`, `fastapi`, `starlette`, etc. Equivalent internal patterns exist.
+
+
+### Project Structure
+
+- In general, strongly prefer clusters of small source files to a single or small number of large ones - a few hundred
+  lines of code is a good target maximum, and there is no minimum.
+  - Our code is 'type-heavy', and small modules defining nothing but interrelated stateless structures are welcome.
+- While not necessarily the case, organize packages as if it were to be managed by a guice-style dependency injector,
+  with package-level injector modules that each refer to their child packages' injector modules and so on.
+- With the exception of root packages, (relatively) deep package nesting is preferred over large flat packages with
+  many, less tightly related modules.
+- Structurally quarantine all interaction with any external dependencies.
+  - For small, simple integrations, it may be done within a single module as an optional implementation of an interface
+    (or simple function conforming to a signature)
+  - For intermediate integrations, prefer a separate module dedicated to that integration.
+  - For large, complex integrations, prefer a more root-level package for that integration, whose internal structure
+    mirrors that of the core code it's being integrated with.
+- In general the structure should mirror a 'Clean' or 'Hexagonal' architecture:
+  > Source code dependencies can only point inwards. Nothing in an inner circle can know anything at all about something
+    in an outer circle.
+
+
+### Code Structure
+
+- Within a module, class, or function, code should generally flow from 'callee' to 'caller' - roughly as if things
+  needed to be declared before their use.
+  - `def _main() -> None:` should almost always be at the bottom of the module
+  - A class `Fooer` should generally have its main public `def foo(self) -> None:` as its last method.
+  - Internal helpers within a module / class don't necessarily have to be either strictly all together or strictly near
+    their dependent code - that is a case by case judgement call.
+
+
+### Naming
+
+- Module names should *usually* (but *not* always) be nouns (usually plural or gerunds), not verbs, so as to not clash
+  with function names. A module should be named `parsing.py`, not `parse.py`, so `__init__.py` could `from .parsing
+  import parse` without shadowing the module itself.
+- Function names should be verbs.
+- When naming interface classes, the interface should be the 'bare' name, and implementations should have prefixes and
+  suffixes. For example, a user service interface would be `UserService`, with a `DbUserService` or `DictUserService`
+  subclass, or even a `UserServiceImpl` subclass if there is only one sensible initial implementation but it still
+  justifies being abstracted.
+- When using acronyms, only the first letter of the acronym should be uppercased when it appears in CamelCased names so
+  as to distinguish it from adjacent acronyms. For example, a class to parse ABNF grammars would be `AbnfParser`, and a
+  class to parse the JSON ABNF grammar would be `JsonAbnfParser`.
+
+
+### Packages
+
+- All packages must have an `__init__.py` file, even if empty.
+
+
+### Imports
+
+- Outside of `__init__.py` modules, imports are always one item per statement.
+  - *Do not* do the following (outside of `__init__.py` modules):
+    - `from foo import a, b`
+    - ```python
+      from foo import (
+          a,
+          b,
+      )
+      ```
+  - *Do* do the following:
+    - ```python
+      from foo import a
+      from foo import b
+      ```
+  - `__init__.py` modules are kind of free to do whatever makes sense in their context.
+- **NEVER** `import *`.
+  - Because of this rule it's not necessary to ever use `__all__ = ...`.
+- **Always** use relative imports within a package. **Never** reference the name of the root package from within itself.
+  For example, within the `omcore` package, it's `from . import lang`, not `from omcore import lang`. Within the
+  `omcore` root package there should never be an import line containing the word `omcore` - and references to the root
+  name should be avoided in general.
+- Use the following import aliases for the following modules if they are used:
+  - `import dataclasses as dc`
+  - `import typing as ta`
+- For *package-internal* imports, almost always import specific items rather than whole modules or packages.
+  - Here, 'package-internal' is loosely defined as the layer which 'external' users of the code will treat as the
+    'public' interface.
+- For other imports, strongly prefer to import a module or package, rather than importing specific items from it. So for
+  example, use `import typing as ta; fn: ta.Callable ...` as opposed to `from typing import Callable; fn: Callable ...`,
+  and `import dataclasses as dc; @dc.dataclass() ...` as opposed to `from dataclasses import dataclass; @dataclass()
+  ...`.
+- Unless instructed or unavoidable, prefer to use only the standard library and the current existing codebase.
+  - Notable exceptions include:
+    - anyio - In general async code should write to anyio rather than asyncio (or trio) unless it is specifically being
+      written for a particular backend.
+      - **NOTE:** this is in flux.
+    - pytest - Write tests in pytest-style, and assume it is available.
+  - \[**lite**\] 'lite' code can have no external dependencies of any kind, and can only reference other 'lite' code.
+    - Lite async code uses only asyncio, and only uses functionality available in python 3.8.
+    - Lite tests are written with the unittest package.
+- Unless forced to for external interoperability, avoid `pathlib` - use `os.path` instead.
+- For heavy or optional imports, **ALWAYS** import whole modules, **not** individual module contents. For example, use
+  `import torch; t = torch.Tensor(...` rather than `from torch import Tensor; t = Tensor(...`.
+  - Rationale: we have a lazy import mechanism that operates at the module level. Do not attempt to manually late-import
+    such libraries, just import them as regular modules.
+- Outside of lite code, strongly avoid 'inner imports' within function or method bodies. Prefer instead a top-level
+  `with lang.auto_proxy_import(globals()): import foo` block, or a more traditional `if ta.TYPE_CHECKING: import foo;
+  else: foo = lang.proxy_import('foo')` style lazy import.
+
+
+### Modules
+
+- Module names should always be lowercase, and there should **never** be underscores in module names, *except* for a
+  `test_` prefix on test modules. For module names we strive to make them one word only, and failing that we squash
+  words together like the stdlib: `functools`, etc.
+- Avoid global state in general. Constants are however fine.
+- Do basically no 'work' in module body:
+  - *NEVER* eagerly do any IO in module body - wrap any such things in a `@lang.cached_function`.
+  - *NEVER* write dumb python 'scripts'. Modules intended as entrypoints are great, but *ALWAYS* make them importable
+    side-effect-free, and *ALWAYS* have an `if __name__ == '__main__'` guard at the bottom. And almost always have that
+    just call a `def _main() -> None:` or `async def _a_main() -> None:`. Don't pollute module globals with state even
+    if the module is running as entrypoint.
+- Avoid temporary values in module global scope - for example, construction of a global effectively const `Mapping` via
+  a comprehension is fine in module body (as comprehension variables do not leak out to parent scope), but a bare for
+  loop in module body is not okay (as the loop variables and any intermediates in the loop body will be left as
+  globals). Instead, prefer to define and call a module private function which returns the desired global value.
+- Always use relative imports even in python modules intended to be directly executed. All python invocations will
+  always be done via `python -m`.
+- The codebase uses a handful of `# @om-...` magic comments in python source files, including:
+  - `@om-lite` - denotes a \[**lite**\] source file. When present in a package's `__init__.py`, it means all source
+    files in all packages and subpackages, recursively, are \[**lite**\].
+  - `@om-manifest` - triggers the automatic generation and maintenance of an entry in `.om-manifests.json`.
+  - `@om-generated` - written into source files that are the products of code generation - these are never to be
+    modified manually, and can generally be ignored (they tend to be huge).
+
+
+### Module Layout
+
+- Modules should generally follow the following layout:
+  - A single `# ruff: noqa: ...` line if necessary
+  - **NO blank line**
+  - Any module-scoped `# @om-...` comments
+  - **NO blank line**
+  - A module docstring, if any
+  - **NO blank line**
+  - Import blocks, separated by a single blank line if multiple blocks are present:
+    - Stdlib (always imported as whole modules, never individual items)
+    - Third-party
+    - Local (other in-repo root packages)
+    - Current-root-package internal imports (always relative)
+  - **TWO blank lines**, if the following is present:
+  - Typing stuff:
+    - TypeVars, like the following:
+      - `IntT = ta.TypeVar('IntT', bound=int)`
+      - `FooT = ta.TypeVar('FooT', bound='Foo')`
+      - `T_contra = ta.TypeVar('T_contra', contravariant=True)`
+    - TypeAliases, like the following:
+      - `IntOrStr: ta.TypeAlias = int | str`
+      - `type ModernFooOrBarOrStr = Foo | Bar | str` - standard code may use new style type statements
+      - `FooOrBarOrStr: ta.TypeAlias = ta.Union['Foo', 'Bar']` - lite code must use old style, must quote forward refs
+    - These should generally be grouped semantically, and may or may not be separated by blank lines.
+  - **TWO blank lines, always**
+  - A divider line of exactly `##`
+  - **TWO blank lines, always**
+  - Then, finally, arbitrary module source code.
+- Source files may be divided into logical sections by divider line comments, with or without a 'title'.
+  - Do *NOT* add leading or trailing hyphens / equal signs / etc. in the divider line comment. For example, *don't*
+    write `# --- Stuff ---`, *do* write `## Stuff`.
+- As an example:
+  ```python
+    import typing as ta
+
+    from omcore import lang
+
+
+    T = ta.TypeVar('T')
+
+
+    ##
+
+
+    @lang.cached_function
+    def make_it_a_tuple(t: T) -> tuple[T]:
+      return (t,)
+    ```
+
+
+### Classes
+
+- Ensure constructors call `super().__init__()`, even if they don't appear to inherit from anything at their definition
+  - *except* if the class is `@ta.final` and there is explicit reason to not.
+  - A blank line should follow the super call if it is the first statement of the method (which it usually is) and there
+    are more statements in the method.
+- Prefer to use dataclasses for even moderately complex usecases - if there are, say, more than a 2-element tuple, a
+  dataclass should probably be used.
+- `ta.NamedTuple` still has limited usecases, such as replacing a function's return type from an anonymous tuple to a
+  named one (to allow it to be destructured by callers as before), or as a cache key, but in general almost always
+  prefer dataclasses.
+- If a number of related functions are passing around a growing number of the common args/kwargs, don't be shy about
+  refactoring them into methods on a common class with shared immutable and mutable state - even if the class is
+  considered private implementation detail and not part of any public api.
+- For any necessary global state involving multiple interrelated variables, consider encapsulating it in a class, even
+  if it's only a private singleton.
+- If appropriate, lean towards stateless classes, taking dependencies as constructor arguments and not mutating them
+  once set, and passing around and returning dataclasses for intermediate data. If however significant mutable shared
+  state is involved just use regular private class fields.
+  - Such dependencies should not be exposed publicly for other code to lazily piggyback off of: avoid transitive
+    dependencies.
+- While not necessarily the case, write code as if it were to be managed by a constructor-injecting guice-style
+  dependency injector.
+  - Ideally, classes have their functional dependencies as ctor kwargs, and if possible these have sensible defaults.
+  - In such cases, prefer to have a kwarg default value for primitives and immutable values, otherwise prefer an ` |
+    None = None` kwarg and instantiate the default value in the ctor if necessary.
+- Strongly prefer composition over inheritance.
+- Prefer relatively fine-grained dependency decomposition.
+- **STRONGLY** avoid giant, monolithic classes containing _eVeRyThInG_ anyone will ever need. Avoid classes like
+  `AppContext` and `AppConfig` each having large number of fields, *even if* those fields are arbitrarily deeply nested
+  within otherwise well-typed child objects.
+- For situations in which different behaviors are necessary, prefer to define an interface or abstract class with
+  `@abc.abstractmethod` members, and write multiple implementations of them as warranted. Prefer to refer to the
+  interface in type annotations unless it must specifically refer to a given implementation.
+- Protocols are to be used sparingly where they make sense. In general, nominal typing is a good thing - it is desirable
+  that not all functions that return an `int` are `UserIdProvider`'s.
+- An abstract class with nothing but abstract (or constant) members is referred to as an interface. In general, prefer
+  pure interfaces as opposed to full abstract classes containing partial implementations at package public interface
+  boundaries.
+- For marking subgroups in an otherwise-'closed' family of classes, an empty mixed-in abstract class is usually
+  preferred to a `ta.Union` type alias of the qualifying concrete types - but this is not a strict requirement.
+- Do not use `abc.ABC` - in standard code use `lang.Abstract` and in lite code use `omcore.lite.abstract.Abstract`.
+  - Rationale: `abc.ABCMeta` adds extreme overhead to `isinstance` / `issubclass` checks (6x) in order to support
+    virtual base classes, which are almost never needed or desirable.
+- `@abc.abstractmethod`'s should always do nothing but `raise NotImplementedError` - but they *should* do that,
+  *unless* it's likely they will be involved in `super()` calls through multiple layers of inheritance (which should be
+  fairly rare as composition is preferred to inheritance).
+- Properties should be free of side-effects.
+  - They must *never* do IO under any circumstance, and they should *strongly avoid* making any mutation or acquiring
+    locks. If one needs to do these things, it should be a method.
+    - Harmless, idempotent, lock-free, and otherwise sideeffect-free caching via mutation is permitted in properties,
+      but the threshold for 'just make it a method' is very low.
+  - Rationale: Many utilities eagerly inspect properties at runtime, even private (underscore-prefixed) ones, so they
+    cannot alter state.
+- Outside of rare, specific instances, **DO NOT** expose mutable internal class state.
+  - Keep all mutable state private as single-underscore-prefixed fields.
+  - As necessary for usage, expose internal state via methods or `@property`'s. For such cases do one of the following:
+    - Type-annotate the return type as immutable. For example, a property exposing an internal `list[int]` would be
+      annotated as returning a `ta.Sequence[int]`, a `dict[int, str]` would be annotated as returning a
+      `ta.Mapping[int, str]`, and a `set[int]` would be annotated as returning an `ta.AbstractSet[int]`.
+    - Return a defensive copy of the internal state. For example, a method returning an internal `list[int]` would
+      return a copy of the internal list.
+      - Note 'method' not 'property' - properties should not return mutable containers!
+
+
+### Functions
+
+- Use keyword-only parameters regularly - almost always, adjacent but semantically distinct parameters of the same type
+  should be keyword-only. The only exception to this is trivial and well-known patterns like `range`, `re.match`,
+  `dict.pop`, `(width, height)`, etc.
+- Similarly, use positional-only parameters as called for, but significantly less 'by default' than keyword-only
+  parameters.
+- Similar to golang, parameter defaults should be the 'zero-value' of the type - for example, instead of
+  `foo: bool = True`, prefer `no_foo: bool = False`.
+- **In general, function definitions with more than 3 parameters (excluding self), and function calls with more than 3
+  arguments (excluding bound self), should be split across multiple lines with 1 parameter / argument per line.**
+  - When splitting a call or def across lines, the first line should **NEVER** have an argument or parameter - it should
+    **ALWAYS** end with an opening brace `(`.
+  - This is *not* a strict dogmatic decree - it's very subjective, and there's plenty of justifiable cases for keeping
+    things on one line. In general though this is to promote uniformity / symmetry and reduce visual density.
+  - However, (almost) **NEVER** put arguments / parameters over multiple lines with multiple of each on each line!
+    Either keep everything on one line, or put everything on its own line - there is almost never any reason to do it
+    differently. It is (almost) **NEVER** acceptable to have for example 2 args on a line, followed by 3 args, followed
+    by 1, et cetera.
+    - But even this is subjective lol - maybe the only example I can come up with is a variadic function taking k/v
+      argument pairs for which it's justifiable to put 2 arguments per line - but again, this is the extreme exception.
+  - These rules apply much more strictly for definition parameters than for call arguments - defs will necessarily be
+    longer due to having type annotations, and in general will be read by readers more frequently than any one of their
+    callers.
+- Strive for local consistency - if you have 3 otherwise similar adjacent things, and one needs to be broken into 2
+  lines, break the other 2 into 2 lines in the same manner too even if they wouldn't on their own need that.
+- In general, space out your code! Group logical sections of function logic together and divide them with an empty line. 
+  Doing this does *not* require a comment of any kind, just a visual break for the reader.
+  - In general, density is *not* a virtue!
+
+
+### Dataclasses
+
+- Do not use bare, un-called `@dc.dataclass` as a decorator - always use `@dc.dataclass()` even if it is given no
+  arguments.
+- **Strongly** prefer frozen dataclasses.
+- In standard code, prefer to `from omcore import dataclasses as dc` - not the standard library `dataclasses` module.
+  The interface and behavior are the same.
+
+
+### Exceptions
+
+- **Never** use the `assert` statement anywhere but test code - rather, check a condition and raise an `Exception` if
+  necessary.
+  - Prefer to use the 'check' system (`from omcore import check`, or `from omcore.lite.check import check` for lite
+    code) where `assert` would otherwise be used.
+- Outside of `TypeError`, `ValueError`, and `RuntimeError`, prefer to create custom subclasses of `Exception` for more
+  specific errors. Use inheritance where beneficial to communicate subtypes of errors. Semantically meaningful error
+  types are usually more important than human readable error messages.
+  - `KeyError` should however not be raised except in the specific and rare case of implementing a `ta.Mapping` or
+    direct equivalent. For example, a `UserService` `get_user` method should raise a `UserNotFoundError`, not
+    `KeyError`, when a given user is not found.
+- In general, avoid use of `contextlib.suppress` - prefer to use an explicit `try`/`except` block instead.
+
+
+### Type Annotation
+
+- Type annotate functions and class fields wherever possible, even if it is simply `ta.Any`, but use the most specific
+  annotation feasible.
+  - Lack of type annotation is an explicit choice communicating that that particular code cannot or should not be
+    statically typed (usually because it is particularly dynamic).
+  - Almost always, if one class field or function parameter is annotated, all fields / parameters / return values should
+    be.
+  - Return value annotations should be included on most magic methods like `__init__` and `__hash__`, but trickier ones
+    like `__exit__` and `__eq__` may be omitted.
+  - An exception to this is test code - in general don't bother type annotating test code, and in fact avoid test
+    function parameter annotations due to the dynamic nature of pytest fixtures.
+- We always prefer all `ta.TypeVar`'s, and usually prefer `ta.TypeAlias`'s, at the top of the module, just under
+  imports, and together with them before the initial separating `##` divider line.
+- Wherever possible, do **NOT** quote forward-refs.
+  - We are on python 3.14, so do not add `from __future__ import annotations` - in 3.14+ all type annotations are
+    already deferred.
+  - Per above, as we prefer `ta.TypeAlias`'s at the top of the module with imports, they're necessarily almost always
+    going to wind up quoting anything defined in the module.
+- In standard code, use PEP-585 and PEP-604 style annotations for builtin types - use `list[int]` instead of
+  `ta.List[int]`, and `int | None` instead of `ta.Optional[int]`.
+  - Note that \[**lite**\] code must still use pre-PEP-585 annotations like `ta.List[int]` and `ta.Optional[int]` due to
+    PEP-585 not being supported in python 3.8. Note that when doing this source files must `# ruff: noqa: ...` any
+    relevant lint errors - usually things like UP006, UP007, UP045, ...
+  - Portions of type annotations which must be quoted for any reason (such as for forward refs in lite code) should
+    **ONLY** be simple identifiers, not 'type expressions'. For example, use `ta.Optional['Foo']` instead of
+    `'ta.Optional[Foo]'`.
+- Use `typing` aliases for non-builtin types - use `ta.Sequence[int]` instead of `collections.abc.Sequence[int]`.
+- Prefer to accept immutable, less-specific types - a function should likely use a `ta.Sequence[int]` parameter rather
+  than a `list[int]`. Use `ta.AbstractSet` over `set` and `frozenset`, and use `ta.Mapping` over `dict`, accordingly.
+- When returning values, prefer to use the full type if the caller 'owns' the value, and use a less-specific, usually
+  immutable type when the caller does not. For example, a utility function filtering out odd numbers from a
+  `ta.Iterable[int]` can return a new `list[int]`, but a getter property on a class exposing some internal set of
+  integers should probably return a `ta.AbstractSet[int]` rather than a `set[int]`.
+- Don't avoid `ta.Generic` and type parameters where it makes sense, but usually annotating something as a superclass
+  will suffice. When present in a class definition, `ta.Generic` should be the last class in the base class list.
+- PEP-695 `type` statements are permitted in standard code, and are the **required** form for *recursive* type aliases
+  - The runtime reflection system and the marshal system built on it handle them natively, including recursion.
+  - Non-recursive module-level aliases may continue to be declared as global variables annotated `ta.TypeAlias` (e.g.
+    `IntList: ta.TypeAlias = list[int]`) - there is no need to update existing legacy-style declarations.
+  - Note that in \[**lite**\] code, there is no `type` statement (3.12+) and no `ta.TypeAlias` (3.10+). In lite code,
+    declare aliases as plain global assignments suffixed with `# ta.TypeAlias`. Additionally, type aliases in lite code
+    **must be kept on a single line**. This restriction does not apply to standard code.
+    - Rationale: lite code is written to be 'amalgamated' - stitched together into a single python file - in which case
+      type aliases are relocated to the top of the file **and globally deduplicated**. As such each line of type alias
+      must be self-contained.
+- PEP-695 type *parameter* syntax (`class Foo[T]:`, `def foo[T](...)`) is permitted, but declaring `ta.TypeVar`'s
+  explicitly at the top of the module is still the default style.
+- Always quote the type form argument passed to `ta.cast` if it is anything more complex than simple direct
+  unparameterized reference.
+- While new-style `A | B` union type forms are permitted (outside of lite code) and preferable for small unions, for
+  unions of many items or unions representing things like related subclasses (like a node hierarchy) it's still often
+  preferable to use an old-style `ta.Union` so the items each be put on a separate line with a uniform trailing comma,
+  rather than an infix pipe operator that must be omitted from the last line.
+  - When this is done the first line (the one with the `ta.Union[`) must be suffixed with `# noqa: UP007` for ruff.
+- Generally prefer to annotate abstract async methods as `def foo(...) -> ta.Awaitable[T]`, not `async def foo(...) ->
+  T`.
+  - Rationale: it's common for implementing methods to return perfectly valid awaitables which are not async functions.
+
+
+### Async
+
+- Per the dependencies section, most async code should strive to be written independent of which (if any) event loop it
+  happens to be running under.
+  - While anyio is being phased out, `omcore.asyncs.asynclite` exists as an alternative for simple, lower-level async op
+    requirements like sleeps, locks, events, queues, promises, etc.
+  - asyncio-ness should generally be kept at a high level in the code-organizational stack - don't shy away from deep
+    integration with it, use what's available in it (accounting for lite's 3.8 mandate), but generally try to isolate
+    asyncio-specifics to injectable interfaces passed down to underlying machinery.
+    - A common pattern is `class Fooer(lang.Abstract): ...` -> `class AsyncioFooer(Fooer): ...`.
+- Tests for async code that don't actually need any asyncio- or other- real async machinery should *not* be async tests:
+  they should be sync tests, driven by `lang.sync_await` / `lang.sync_async_with` / `lang.sync_aiter` (or lite
+  equivalents).
+
+
+### Threading
+
+- nogil / freethreaded / PEP-703 python is to be considered a fully supported primary target, and will eventually become
+  the default. Code should be written aware of and prepared for this: most things don't need to be thread-safe, but that
+  should always be a conscious decision either way.
+  - 'Large' toplevel entrypoints like the dependency injector, the marshaling system, the global manifest loader, etc.,
+    should by default be thread-safe, but things below that generally don't have to be.
+  - Lean on the guaranteed thread-safety of the blessed handful of atomic operations like dict getitem/setitem,
+    list.append, etc. - don't hide data behind a mutex if these atomic operations suffice.
+  - In general 'harmless' lazily-initialized `cached_function`'s and such don't need to be locked, as long potentially
+    duplicate initialization is acceptable.
+  - While lite code must run on 3.8 - long predating freethreaded python - it must also be prepared to run under it.
+
+
+### Comments
+
+- Avoid unnecessary and frivolous comments. Most semantic meaning should be able to be inferred from package / module /
+  type / method / function / parameter names and annotations. For example a function like `def add_two_floats(x: float,
+  y: float) -> float:` does not need a docstring or comments.
+- Do not repeat typing information in function docstrings. In general function and parameter names and types should be
+  clear enough to not require explicitly listing them in docstrings. Do not use google-style or equivalent docstrings.
+- Both opening and closing docstring triple-quotes should be alone on their own dedicated line *unless* the entire
+  docstring (including triple-quotes and indentation) fits on a single 120-column wide line.
+- All docstrings should be followed by a blank line.
+- Reserve inline comments for 'surprising' or dangerous things, such as invariants which must be maintained. A comment
+  like `self._ensure_user_exists()  # ensure the user exists` is worthless, but a comment like
+  `self._ensure_user_exists() # safe because we already hold the user lock` is valuable.
+- Use a single space to separate sentences, not two.
+
+
+### Documentation
+
+- Documentation should be written in markdown, and should have a general maximum line width of 120 characters.
+- Substantial packages should have a `README.md` file at the root of the package directory outlining the package's
+  purpose, usage, and high level architecture. These files are automatically included in distributions as resources for
+  end-users.
+  - This is however a work in progress ☺️.
+
+
+### Tests
+
+- As above, write tests in pytest-style.
+- Tests should go in `tests` subpackages nearest to the code they test.
+  - As we generally prefer organizing code into small nested packages, this naturally results in each layer of
+    subpackage tending to have its own `tests` subpackage. Avoid cramming tests for subpackages into some more
+    root-level parent `tests` package.
+    - For example, if you have `tui/controls/textbox.py`, `tui/input/keyboard.py`, and `tui/screen.py`, you *should*
+      have `tui/controls/tests/test_textbox.py`, `tui/input/tests/test_keyboard.py`, and `tui/tests/test_screen.py` -
+      you should *not* have `tui/tests/test_textbox.py` or `tui/tests/test_keyboard.py`.
+  - Test-only support code should also go in a `tests` subpackage, but should not have a `test_` module name prefix.
+    - Test code in subpackages is allowed to import test-only support code from parent `tests` subpackages. For example,
+      a `tui/controls/tests/test_textbox.py` would be allowed to import a `tui/tests/utils.py` file via `from ...tests
+      import utils`.
+- Use raw assertions liberally in tests, and use pytest utilities like `pytest.raises`.
+- Use fixtures and other advanced pytest features sparingly. Prefer to simply instantiate test data rather than wrap it
+  in a fixture.
+- In \[**lite**\] test code the `unittest` package must be used instead of `pytest` because lite tests are run in venvs
+  with no external dependencies present.
+  - Be sure async tests are put in a `IsolatedAsyncioTestCase` subclass.
+  - It is equally fine to use both bare `assert` statements and `unittest` assert helpers like `assertCountEqual`.
+- Do **not** use 'sleep' to simulate lock-step execution, timeouts, or other test conditions. Tests should strive to
+  deterministically complete as quickly as possible via explicit synchronization.
+- In general, prefer to write tests in a way that they can be run in parallel.
+- Avoid mocks - prefer to structure code such that a 'simple' but still functioning implementation of an interface can
+  be used where a mock would otherwise. For example, for a some `UserService` interface with an `add_user` method, for
+  which a `RemoteUserService` would usually make a remote service call, prefer to implement a `DictUserService` class
+  with an `add_user` method such that it actually stores the added user in a dictionary on the instance.
+  - In practice these are usually useful to have outside of test code as default implementations anyway!
+  - These are often called 'fakes' but the term is avoided to emphasize their general non-test utility.
+- Strongly avoid monkeypatching anything. Ideally code should be structured to allow more graceful means of
+  instrumentation and fault injection (e.g. via alternative interface implementations).
+  - Occasional unavoidable exceptions exist, such as being forced to patch an external dep, or when doing fault
+    injection that's too fine-grained to justify interface decomposition.
+- An ideal to aim for is a test suite reproducing all realistic (or encountered) failures at each individual IO and
+  synchronization point.
+  - With multiple concurrent actors this may be achieved through 'lock-step' execution: with for example 2 related
+    actors running concurrently which encounter a shared point of synchronization, run a test twice, once with the first
+    actor running first, and once with the second actor running first.
+- Do not add an `if __name__ == '__main__':` block to test files. If a test-related utility script needs an entrypoint
+  that's fine, but in that case that utility script shouldn't itself contain tests.
+
+
+### Runtime
+
+- Unless forced to through interaction with external code, do not use environment variables for anything. Configuration
+  should be injected, usually as keyword-only class constructor arguments, and usually in the form of dataclasses or
+  `ta.NewType`s.
+- Outside of test code, *NEVER* use `__file__` - never assume python code is running in `.py` files on a filesystem. (In
+  general, do not even assume to have a readable filesystem). Write code compatible with zipfile python dists and
+  pyoxidizer in which there is no `__file__`. Access resources via `lang.get_package_resources` /
+  `lang.get_relative_resources`.
+- In general, with very rare exception, 'everything (that does IO) needs a timeout', but the default may be large enough
+  to never be realistically hit in practice (think 5m for interactive work, 1h for background work).
+  - By default all pytests already run with a standard timeout.
+- In non-lite code use `uuid.uuid7()` by default for uuid generation. In lite code use `uuid.uuid4()`.
+- Do **NOT** programmatically modify `sys.path`, EVEN TEMPORARILY. If you're thinking about doing this for a test, you
+  should be spawning a temporary subprocess with a modified `PYTHONPATH` env var.
+- Usually prefer to use `collections.deque` for queues rather than `list`.
+
+
+### C/C++ Extensions
+
+- As with python code - but more importantly - **target only CPython 3.14+**. API's which have been removed or rendered
+  obsolete in or before 3.14 (like `Py_TRASHCAN_BEGIN`) should be avoided, and no version guard is necessary for
+  anything added in 3.14 or earlier.
+- C extensions use C11 and C++ extensions use C++20.
+- In general prefer to write native extensions in C++.
+- Use the C++ standard library liberally, but not 'excessively' lol. Write more 'C-style' code when interfacing with
+  CPython.
+- C/C++ extensions should have `// @om-cext` as their first line, and will thereafter be automatically built and
+  packaged by existing codebase machinery.
+- C/C++ extensions should be kept to a single, self-contained source file - do not write new header files.
+- C++ source files use the `.cc` extension, and C++ header files use the `.hh` extension.
+- Native extensions *must* use PEP-489 style multi-phase extension initialization (`PyModuleDef_Init`).
+- Modules must not have any `PyObject` related global state.
+  - Anything python related that would otherwise be a global must go a struct accessed by `PyModule_GetState`
+    (PEP-3121).
+  - All defined types must be heap types via `PyType_FromModuleAndSpec`, never static `PyTypeObject`'s (PEP-573).
+- Modules should mark themselves `Py_MOD_GIL_NOT_USED` and `Py_MOD_MULTIPLE_INTERPRETERS_SUPPORTED` as applicable.
+  Modules should strive to be written to support both if at all possible.
+- Always enclose the bodies of control-flow statements (`if`, `else`, `for`, `while`, `do`) in braces, even for a single
+  statement.
+- Provide vectorcall implementations as appropriate: generally if we're writing an extension it's for performance
+  anyway.
+- See `omdev/cexts/_boilerplate.cc` for a simple C++ extension template.
+
+
+### Javascript
+
+- Our 'big' javascript is to be written as `.mjs` files.
+  - Self-contained or one-off scripts may still be simple `.js` files.
+- Absolutely no js package manager of any kind is permitted. All deps must be vendored into the repo (and must thus be
+  compatibly licensed with BSD-3).
+  - As a sole exception, the typescript typechecker `tsc` will be invoked via `npx` during type checking, but absolutely
+    no other use of any javascript ecosystem package manager or installer is permitted - this includes but is not
+    limited to: `npm`, `pnpm`, `yarn`, `bun`.
+  - NOTE: The dep vendoring tool has not yet been integrated into this repo.
+- There is no compilation step of any kind permitted for javascript code: our `.mjs` files are shipped directly to a
+  browser, unmodified - as are vendored deps.
+  - We do **NOT** use typescript, but it is acceptable to interact libraries written in it if appropriately vendored.
+- Our `.mjs` files are to be type-annotated in the
+  [JSDoc style](https://www.typescriptlang.org/docs/handbook/jsdoc-supported-types.html?utm_source=chatgpt.com), and
+  should expect to be type checked by the typescript type checker `tsc` in `checkJs` mode.
+  - Inline type annotations should generally be on the same line as the item being annotated - *not* on the line above.
+    For example:
+    ```js
+    /** @type {string | null} */ this.clientId = null
+    ```
+  - However, `@returns` annotations for functions should generally be on their own line above the function definition.
+- Our js indentation is 2 spaces.
+- As with C/C++, always enclose the bodies of control-flow statements (`if`, `else`, `for`, `while`, `do`) in braces,
+  even for a single statement.
+- *Most* inline functions deserve to be wrapped in braces and have their bodies - even if a single expression - on their
+  own lines.
+  - This is *more* true for effectful code like event callbacks, but *less* true for things like `.map` and `.filter`
+    bodies.
+- The structure of a `.mjs` file should follow thusly:
+  - A single `// @ts-check` comment.
+  - **TWO blank lines**, if the following is present:
+  - Imports, if present:
+    - Single-item imports may be on one single line
+    - Multi-item imports must put each item on its own line, as well as put both `import {` and `} from './...'` on
+      their own lines. Each item is indented 2 spaces.
+    - Each single-item import line and/or multi-item import block is to be separated by a single blank line.
+  - **TWO blank lines**, always
+  - A divider line of exactly `////`
+  - **TWO blank lines**, always
+  - Then, finally, arbitrary module source code.
+- As an example:
+  ```js
+  // @ts-check
+  
+  
+  import {ConnectionState} from './core/connection.mjs'
+  
+  import {
+    VimMode,
+    vimModeLabel,
+  } from './ui/vim.mjs'
+  
+  
+  ////
+  
+  
+  /** @returns {string} */
+  function errorDetails(/** @type {unknown} */ error) {
+    return error instanceof Error ? error.stack ?? error.message : String(error)
+  }
+  ```
+
+
+### Misc. Linguistic Pedantry
+
+- For multiline `if` statements put the `or` / `and` operator at the **end** of each line, **not** at the beginning. For
+  example:
+  ```python
+  if (
+      condition_one and
+      condition_two
+  ):
+      ...
+  ```
+
+- Don't avoid technically-redundant parens for the sake of compactness if it helps readability: a reader shouldn't have
+  to be wary of misinterpreting operator precedence to understand the code.
+- Put only a single space after a punctuation between sentences.
+- Spell it 'falsey' not 'falsy'.
+- Unless specifically referring to something unicode-y, don't use em dashes in comments and docstrings! 🤖
+- Use a `.yml` extensions not `.yaml`.

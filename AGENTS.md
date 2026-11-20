@@ -1,0 +1,105 @@
+### Context
+
+**Do these before doing anything**:
+
+- First, read `README.md` and `CODESTYLE.md` to understand the repo. Read and understand these files *in entirety* - if
+  your reading is truncated, continue through the whole file.
+  - The codestyle doc is from a much larger existing `om` monorepo but it all still applies here.
+
+
+### DO-NOTS
+
+- Do NOT forget the **blank line** after a class or function docstring. For example, do NOT do this:
+  ```python
+  class MyClass:
+      """Some docstring"""
+      def __init__(self) -> None:
+          """My init method"""
+          super().__init__()
+  ```
+  Do NOT do that because the docstrings are missing blank lines after them! It SHOULD look like this:
+  ```python
+  class MyClass:
+      """Some docstring"""
+
+      def __init__(self) -> None:
+          """My init method"""
+
+          super().__init__()
+  ```
+- **DO NOT** read `_dataclasses.py` files - these are mechanically generated code for dataclasses and contain nothing of
+  interest. They tend to be huge and will waste your context, they exist solely to speed up imports and assist
+  debugging, and the codebase behaves the same without them.
+- And it's mentioned in `CODESTYLE.md` but again for emphasis: **DO NOT** use `pathlib` by default! Use old school
+  `os.path` by default, unless there's a *good **specific** reason* to also support `pathlib` (such as dep interop). Our
+  internal code does not pass around `pathlib.Path`, it passes around `str`'s, so it's almost never necessary to support
+  `pathlib` even optionally.
+- **DO NOT** universally assume premature abstraction: just because an abstraction already present may look unnecessary
+  at the moment **DOES NOT** mean that it wasn't added for a future purpose.
+  - Our codebase is dependency-injector-heavy: there's frequently going to be an interface with a single impl, and even
+    if nothing else currently visible in the codebase implements the interface, that does **NOT** mean that it wasn't
+    added and isn't actively retained as either a future point of extension or an actively used one in code not visible
+    here. You, here, necessarily don't have a full picture of where this codebase is going, so you're simply not capable
+    of universally assessing whether or not these kinds of abstractions are truly unnecessary.
+  - This is *not* to say however that *all* present abstractions are perpetually necessary: simplification and
+    consolidation are still virtues to strive for! However, particularly in higher levels of the stack, be increasingly
+    cautious about this pitfall.
+  - As an example, when asked to implement subagent injector scopes in my llm agent code, agents would *consistently*
+    implement the new injector scope, then see that nothing was bound in the new scope and just remove it despite it
+    being their entire task to begin with!
+
+
+### Running stuff
+
+- Do not use the system python - use the `python` executable in the project root to run everything - it will take care
+  of virtualenvs and `PYTHONPATH` for you.
+  - I repeat: **DO NOT USE THE SYSTEM PYTHON - USE THE `python` EXECUTABLE SCRIPT IN THE REPO ROOT**.
+  - In general, prefer to run everything via `./python -m ...`, not via scripts in a venv's `bin/` dir.
+  - Additionally there may be other venvs available to you in the `.venvs` directory - particularly:
+    - `14t`: freethreaded 3.14, which is not yet the default but should be kept in mind
+    - `8`: 3.8, for working with lite code
+- Use pytest to run tests via the `python` script: `./python -m pytest ...`. During iterative development, only run
+  tests relevant to code changed.
+- Note that if you're in a docker sandbox (which is highly likely) you will not have access to docker compose services
+  like mysql and postgres, causing relevant tests to fail with a failure to connect. As long as you're not working on
+  immediately relevant code (sql code specifically) then this is fine and can be ignored.
+
+
+### Makefile targets
+
+- Run `make fix check` regularly and before committing - it will run linters and typecheckers, but tests are run
+  separately. During iterative development, run this after moderate changes when the code is believed to be back in a
+  'working' state. Fix all reported issues before committing.
+- Run `make gen` to run various code generation steps. This is generally not necessary unless modifying `codegen=True`
+  dataclasses.
+  - **Note**: you do **NOT** need to run `make gen` or `make gen-dataclass` *every time* you modify a dataclass
+    definition: if a matching codegen'd body is not found for a given dataclass (such as after adding or removing a
+    field, or any other relevant modification) the machinery falls back to just a jit-generating and exec'ing the
+    necessary methods like the regualr stdlib dataclass decorator. `make gen` / `make gen-dataclass` is only strictly
+    necessary before a git commit.
+- Before committing, run `make fix gen check` and ensure that succeeds, then rerun relevant pytests and ensure they
+  pass.
+- As mentioned in `CODESTYLE.md` C/C++ extensions should have a `// @om-cext` header line, and otherwise need no
+  additional manual build wiring. After adding a new extension source file, run `make gen` to add it to the build, then
+  run `make build-cext` to build them in-place. It is not necessary to `make gen` after every source file modification.
+
+
+### `dockerdev`
+
+You may or may not be running inside a `dockerdev` container instance - our codebase-internal general-purpose dev docker
+image. Do not assume that you are by default: just because you're running in docker doesn't mean you're in a `dockerdev`
+container - the user must specifically say you are. **If** you are:
+
+- You have *lots* of installed tools available to you, and may use them all freely.
+- Your git credentials are placeholders, and you may be on `master`, but you should still generally commit as you go
+  anyway.
+  - Code changes made in this session will be extracted from it externally: this session has no `git push` capability to
+    anything.
+  - Even if the exact git history of this session doesn't survive the container it's still useful within it.
+- Unless otherwise noted you do **NOT** have access to the docker compose services used by external dev and the ci
+  harness. By default you may ignore relevant test errors, but should generally avoid running relevant tests to begin
+  with.
+  - As an alternative there are various `~/scripts/run-*` scripts available to launch various services (namely:
+    postgres, mysql, s3mock) - you may use these instead.
+    - Note that they all launch interactively, *not* in the background - you are responsible for managing their
+      lifetimes.
