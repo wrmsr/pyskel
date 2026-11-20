@@ -1,27 +1,99 @@
-*.egg-info/
-__pycache__/
-dist/
-.venv*
-*.pyc
-*.pyo
+# Git
+.worktrees/
 
-*.swp
+
+# Editors
+
+## Emacs
 *~
 .#*
 
+## IntelliJ
 .idea*/
 
+## Vim
+*.swp
+
+## Robots
+
+/.claude/
+
+
+# Languages
+/build/
+/target/
+test-*.xml
+
+## C/C++
+/cmake/
+cmake-build-*/
+
+## JS
 node_modules/
 
+## Python
+*.pyc
+*.pyo
+.venv*
+__pycache__/
+
+### Build
+*.egg-info/
+/MANIFEST
+/dist/
+
+### Tools
+*.pstats
+*.pstats.pdf
+*.pstats.png
+*.pstats.svg
+.benchmarks/
+.hypothesis/
+.ipynb_checkpoints/
 .mypy_cache/
 .pytest_cache/
 .ruff_cache/
+.tox/
+cython_debug/
 
+
+# OS
+
+## Mac
+.DS_Store
+
+
+# Binaries
+*.dSYM/
+*.dylib
+*.exe
+*.o
+*.out
+*.so
+
+
+# Var
 *.log
 *.pid
 *.sock
+*.tmp
 
-.DS_Store
 
-*.db
-*.sqlite3
+# Config
+.env
+/secrets.yml
+
+
+# Misc / Project specific
+.cache/
+.om/
+/.cache/
+/.data/
+/.vector_cache/
+/deploy/
+/gen/
+/output/
+/profiles/
+/tmp/
+/weights/
+/wmt32k_data/
