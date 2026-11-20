@@ -499,12 +499,12 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "omcore", extras = ["cext", "mypyc", "plus"], specifier = ">=0.0.73" }]
+requires-dist = [{ name = "omcore", extras = ["cext", "mypyc", "plus"], specifier = ">=0.0.74" }]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "mypy", specifier = ">=2.4.1" },
-    { name = "omdev", specifier = ">=0.0.73" },
+    { name = "omdev", specifier = ">=0.0.74" },
     { name = "pytest", specifier = ">=9.2.0" },
     { name = "pytest-timeout", specifier = ">=2.4.0" },
     { name = "ruff", specifier = ">=0.17.6" },
