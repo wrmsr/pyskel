@@ -368,11 +368,11 @@ wheels = [
 
 [[package]]
 name = "omcore"
-version = "0.0.73"
+version = "0.0.74"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/19/9e/f3fdbf92dfba2f1af81bb3246d184516441a97753b714cc24580b805038d/omcore-0.0.73.tar.gz", hash = "sha256:922c7f94f64a5b11d2b513f1cf56b28c5b1a14cc8b453e21353dc74e8d480ae1", size = 2638635, upload-time = "2026-11-19T06:40:15.877Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/92/12d7fd7d44e4467cf5601ac20ef09906ec88acd3075db935b806b8e1f999/omcore-0.0.74.tar.gz", hash = "sha256:b0c08688559efd7fb3e8d3001431822646773085109e66a34da76858779083ce", size = 2638398, upload-time = "2026-11-20T00:41:44.631Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7e/1b/dd1352eb2f292ee27cd2d92a1ac185b89923907bb56486be4ab9fbdbb7a3/omcore-0.0.73-py3-none-any.whl", hash = "sha256:344651f1b7a88fe110ab2cb14bd30487cfb982d0920d0edf48c34d2d0f785fcc", size = 3282167, upload-time = "2026-11-19T06:40:13.39Z" },
+    { url = "https://files.pythonhosted.org/packages/fc/68/b91447ff0baeac27a0754c1b53375ec6226edb4cbab1dbf44888c1482bdd/omcore-0.0.74-py3-none-any.whl", hash = "sha256:7b1cf347b47fe24e23897f8e897f1c60e369b6b85e5ecf3da8afc34d4df2a699", size = 3281848, upload-time = "2026-11-20T00:41:47.585Z" },
 ]
 
 [package.optional-dependencies]
@@ -391,49 +391,49 @@ plus = [
 
 [[package]]
 name = "omcore-cext"
-version = "0.0.73"
+version = "0.0.74"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "omcore" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/af/51/8b4eaff353b1fd222570339502a6235da9ff7ae6f8fb01fbb5f426edaa59/omcore_cext-0.0.73.tar.gz", hash = "sha256:1004299c573546d342a92d38d7f84af158c929f02a8b9ed9e45e9b3a7c03e58c", size = 613996, upload-time = "2026-11-19T06:40:14.677Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e4/9e/df3de6d5df679429913361f05779d9ce5d7c37d9a47fea453c67758c589d/omcore_cext-0.0.74.tar.gz", hash = "sha256:726711fa6b3f8dc3a5838736eceb9a95ca9a21f9aede911ce632406d67b8d82f", size = 613959, upload-time = "2026-11-20T00:41:41.84Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/05/b1/850ef2fd4544f2c9247b6d86433c54877de3994ea494a6d9235c142fe426/omcore_cext-0.0.73-cp314-cp314-macosx_26_0_arm64.whl", hash = "sha256:a89ca2d187b9781f37e657ffd4df1aea0c78ff09d7e7b49c1f73da4db601e13f", size = 509421, upload-time = "2026-11-19T06:40:21.12Z" },
-    { url = "https://files.pythonhosted.org/packages/a6/fa/71e1dbc33c2119b58a3f1631248d3c0a3734c6fa4b7f3cd65195af2a9923/omcore_cext-0.0.73-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:cf60c7b4b52ffb4bb8c3d381758400cf22c2aa27468802c02af28a7e86fac2ae", size = 1178630, upload-time = "2026-11-19T06:39:54.228Z" },
-    { url = "https://files.pythonhosted.org/packages/6b/d9/06d681d3063b901d8a223f25d53c218e90dc017915a41a41246f3dd61df2/omcore_cext-0.0.73-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:725cbbd464ec125aa800146540a63f3fc76b83d443694e32706be7915b66a2b7", size = 1179821, upload-time = "2026-11-19T06:40:07.743Z" },
-    { url = "https://files.pythonhosted.org/packages/11/7c/8598b5a34a3e8bd212d215d9f4ec4840d72ed8c2477df6781d8b7184bf87/omcore_cext-0.0.73-cp314-cp314t-macosx_26_0_arm64.whl", hash = "sha256:26746fd7caf063135b92958b19a87151957f9259739e4c6e9574d30b00cc9506", size = 517859, upload-time = "2026-11-19T06:40:11.786Z" },
-    { url = "https://files.pythonhosted.org/packages/ba/e3/5497c3ac9695db16c823441e73c33bfa50a115db289ffca1ab5f7c0fbbbc/omcore_cext-0.0.73-cp314-cp314t-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:4b177f0d0d686d650a021c16ee4adf50aee2930008d949b52739c49f4f83b7ab", size = 1281956, upload-time = "2026-11-19T06:40:19.12Z" },
-    { url = "https://files.pythonhosted.org/packages/ed/9a/7b8c6195b73b6c73ba1930c0655e16ee008b368e9be41a88a6cae3951a11/omcore_cext-0.0.73-cp314-cp314t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:31e40fdeefa1ad14509eb39781a9778dda29d7ce7ba222e980d70842398c9dc7", size = 1263170, upload-time = "2026-11-19T06:40:00.916Z" },
+    { url = "https://files.pythonhosted.org/packages/7a/43/fdb65792518696660f621a8adf605ba53c1101e814a6a7beb9503f10c102/omcore_cext-0.0.74-cp314-cp314-macosx_26_0_arm64.whl", hash = "sha256:60b254909011b0fcde38d43bcc6d910c184810bfa1e7b8d12c47410104ce1206", size = 509387, upload-time = "2026-11-20T00:41:40.038Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/c7/e33c9275222ee65f98529332843449d0075d762fd9da7c7ac09a31ed97ba/omcore_cext-0.0.74-cp314-cp314-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c9d3fd71928d7897ad05de50509f10062887404e622306ca64a01dc68356bd8a", size = 1178631, upload-time = "2026-11-20T00:41:55.25Z" },
+    { url = "https://files.pythonhosted.org/packages/1e/aa/9b2f87ab3c8c941acc7f705655ed0fbf3b78101c3454f5c6509f74145fa2/omcore_cext-0.0.74-cp314-cp314-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:8db35948d2912794b97760506db682cbc4ba63e73b52bce2e9d6eabccfc373df", size = 1179822, upload-time = "2026-11-20T00:41:57.639Z" },
+    { url = "https://files.pythonhosted.org/packages/7c/3e/70cd2743f2faace8baa6daa7b172fe3a4a42e0a6b2264121418c4b1f622c/omcore_cext-0.0.74-cp314-cp314t-macosx_26_0_arm64.whl", hash = "sha256:6c2dc3a7042954e533d3cf797b3de8dea17ef3aea0a0805e877ca203d62de698", size = 517867, upload-time = "2026-11-20T00:42:01.203Z" },
+    { url = "https://files.pythonhosted.org/packages/29/42/cf8a70456cfe6d9ba9d922985ea21b5e6cf0b4f3a235fb5af51064e1b4fc/omcore_cext-0.0.74-cp314-cp314t-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:31df3d8ed1deff90aff3e03adc035ad624808d635ef22621029d02c406948ec5", size = 1281955, upload-time = "2026-11-20T00:42:03.429Z" },
+    { url = "https://files.pythonhosted.org/packages/cf/7e/38b9406f74efffcc5f79d01292b0236138089a1edbc9f07a756c5bf2b1c5/omcore_cext-0.0.74-cp314-cp314t-manylinux_2_24_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4ecc4196a39dc8bf030b1c549218762ca75c24c9834b482e54d861a7d228ef30", size = 1263170, upload-time = "2026-11-20T00:41:45.192Z" },
 ]
 
 [[package]]
 name = "omcore-mypyc"
-version = "0.0.73"
+version = "0.0.74"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "librt" },
     { name = "omcore" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/10/ee/dff0c5b04e9c931422996b17a705fcef1b514382cba460572d1054ab1041/omcore_mypyc-0.0.73.tar.gz", hash = "sha256:e48998c4835ed6b5ce045782900f0a3c2479869949444b1644c09d6f1661ef4e", size = 184496, upload-time = "2026-11-19T06:40:15.778Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d9/a8/d7e7f16e87df8f211313589fb3465302272deff08a6caaeb1db347f46d79/omcore_mypyc-0.0.74.tar.gz", hash = "sha256:5e20676f414640467de49abc142d544da68c7d32aa0b6a4e86cf33a29c461482", size = 184497, upload-time = "2026-11-20T00:41:43.779Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fe/6e/e7eb35523d4fefe557e6a2ba2e542f50e1087fa9607dd3c09586ece8108e/omcore_mypyc-0.0.73-cp314-cp314-macosx_26_0_arm64.whl", hash = "sha256:8b41cda224e7dcf233e6a4762fa120889a38a8a95e05fb6fde042bd8ee362796", size = 823896, upload-time = "2026-11-19T06:40:05.426Z" },
-    { url = "https://files.pythonhosted.org/packages/ae/48/4ad1e323b0eeba5a8947565795e1497f46224d55b8abaa9a7b3b8baad299/omcore_mypyc-0.0.73-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:c279c0ab83eae621c3cd580d2e79dadee20616f4d597f3f01eb5444cd1bc9419", size = 1298115, upload-time = "2026-11-19T06:39:58.177Z" },
-    { url = "https://files.pythonhosted.org/packages/97/c0/608a65c01e53b556e08d93dfff41501a9a1739c1563d87b051c333537e09/omcore_mypyc-0.0.73-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:fa66d772183d8711c5a705cbd14d160e9a707bba2baae9e7e791e38c9024be39", size = 1363495, upload-time = "2026-11-19T06:40:17.687Z" },
-    { url = "https://files.pythonhosted.org/packages/f4/61/2fe29c3c5151759a9837df2f74912fd27cbb0386e16ef0d8876328588b44/omcore_mypyc-0.0.73-cp314-cp314t-macosx_26_0_arm64.whl", hash = "sha256:fc7e590a3ec67477a3df74c4355428b7970abd860c487e153886f3cb9eb491ac", size = 873275, upload-time = "2026-11-19T06:40:23.446Z" },
-    { url = "https://files.pythonhosted.org/packages/77/99/3ad9dfeb1666c429181d0fc7d09d8c9a2070b29d7be400c3874af9bdcabd/omcore_mypyc-0.0.73-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:31a8543fbec7e559162f783abed11127053d6f5f67d7fd1dfb9fa7a367f45522", size = 1476761, upload-time = "2026-11-19T06:40:16.926Z" },
-    { url = "https://files.pythonhosted.org/packages/f8/ee/a25f07aae7876a99602ce50c943d2f95b15b3007f6ad6f289743c856543e/omcore_mypyc-0.0.73-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:4550ffbae07a2fd00adfb0b0564bf6eef292adf6d9ff673418c788d85b70b981", size = 1552411, upload-time = "2026-11-19T06:40:04.622Z" },
+    { url = "https://files.pythonhosted.org/packages/67/89/147e0f43fa436717fdf52a3d0fa87f71d439526e9c0af9eea677d4831b47/omcore_mypyc-0.0.74-cp314-cp314-macosx_26_0_arm64.whl", hash = "sha256:5c243f327c2f3e5a53ee4ed8eedb61723117e8c526725ac0d5d4e9b22fb0d314", size = 823877, upload-time = "2026-11-20T00:42:06.629Z" },
+    { url = "https://files.pythonhosted.org/packages/68/e6/0eae86c94e22062783a5f0871215e6fe83905638ebc003e87ba240a8babc/omcore_mypyc-0.0.74-cp314-cp314-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:6068c6626e12abe323989a172fa9f776d9dd6266a615d0c09733ba040f201b7f", size = 1298115, upload-time = "2026-11-20T00:41:50.306Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/a4/813ed8180f195b83f990f89b7a38d3ded20e5a91b5f46030a287c2ef0df1/omcore_mypyc-0.0.74-cp314-cp314-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:033e8f17f14c94133b8c3339b66bd5c4fc15f0885c89090e0378d385d6ed3eb4", size = 1363498, upload-time = "2026-11-20T00:42:05.801Z" },
+    { url = "https://files.pythonhosted.org/packages/39/34/0a117c9223eae027921349f3c83f16bde62e7ea2daf907ced5552f353dc0/omcore_mypyc-0.0.74-cp314-cp314t-macosx_26_0_arm64.whl", hash = "sha256:d9e56124fdb3731d65e7fe175d445624fe27d4d01c266dfe4179e1376925bce6", size = 873250, upload-time = "2026-11-20T00:41:49.146Z" },
+    { url = "https://files.pythonhosted.org/packages/d8/20/f2cbf4cad77d8ae330c16e72331cd0103fe06233e9a95734edff0523d630/omcore_mypyc-0.0.74-cp314-cp314t-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:fd12bbe7e5da4245c3b0f0e4a893a8735a8278824b0f82accae9d43e12af6a7d", size = 1476762, upload-time = "2026-11-20T00:41:32.191Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/9c/7f332a338f686f9cb87f8abbc14c6fa7853ee1dc0055726d56c524dd535f/omcore_mypyc-0.0.74-cp314-cp314t-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl", hash = "sha256:af7435a27b4c53a50d020e93a5ae132a74501bccb2222d522b26d8df6c441257", size = 1552409, upload-time = "2026-11-20T00:41:37.054Z" },
 ]
 
 [[package]]
 name = "omdev"
-version = "0.0.73"
+version = "0.0.74"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "omcore" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/71/32/e757f912201b5a72984aae9032e8e39b6c5c8a942a286d4911891d527597/omdev-0.0.73.tar.gz", hash = "sha256:fb9b2f3d40001b3df7bc198c7eeaae4d50d696aa789c573f0bd1ec6d00b352f0", size = 2130342, upload-time = "2026-11-19T06:39:53.106Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/da/69/b237a0aad2212f90d93bf968d16bc3004a80ad7f560a65c151ab4b39fb10/omdev-0.0.74.tar.gz", hash = "sha256:ff69387ba04593f47d4f47f36d1dc0a0f6bb8d9f8667cc42c8310fac8e43c8e4", size = 2263139, upload-time = "2026-11-20T00:41:58.254Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/64/0de20ccab34872a7928be59568db9a1f3f8c0825505cc9a5d91f4fedfaff/omdev-0.0.73-py3-none-any.whl", hash = "sha256:d05ab73849c81fac7f4eac7d0adaa2439ec565e103fe7c07e4b5af804ef04be4", size = 2388810, upload-time = "2026-11-19T06:40:00.475Z" },
+    { url = "https://files.pythonhosted.org/packages/07/3a/877fd88df13816194de6684102cb4150b4b55b0343483e4d532645b62a97/omdev-0.0.74-py3-none-any.whl", hash = "sha256:aeec5c2841cdfd2a385824833e2d5209a86c2036c9c9f65949bd6b28759bf6b6", size = 2546748, upload-time = "2026-11-20T00:41:56.479Z" },
 ]
 
 [[package]]

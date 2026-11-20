@@ -37,6 +37,10 @@ sync:
 dep-updates: venv
 	${UV} lock --upgrade --dry-run
 
+.PHONY: dep-upgrade
+dep-upgrade: venv
+	${UV} lock --upgrade && ${UV} sync
+
 
 ##
 
